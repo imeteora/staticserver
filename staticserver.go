@@ -38,8 +38,8 @@ func main() {
 	}
 	mux = make(map[string]func(http.ResponseWriter, *http.Request))
 	mux["/"] = index
-	mux["/upload"] = upload
-	mux["/file"] = _StaticServer
+	mux["/upload"] = _upload
+	mux["/file"] = _file
 	server.ListenAndServe()
 }
 
@@ -51,15 +51,15 @@ func (*_FileServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if ok, _ := regexp.MatchString("/css/", r.URL.String()); ok {
 		http.StripPrefix("/css/", http.FileServer(http.Dir("./css/"))).ServeHTTP(w, r)
 	} else {
-		http.StripPrefix("/", http.FileServer(http.Dir("./upload/"))).ServeHTTP(w, r)
+		http.StripPrefix("/", http.FileServer(http.Dir(strUploadDir))).ServeHTTP(w, r)
 	}
 
 }
 
-func upload(w http.ResponseWriter, r *http.Request) {
+func _upload(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles(strTemplateDir + "file.html")
+		t, _ := template.ParseFiles(strTemplateDir + "upload.html")
 		t.Execute(w, "上传文件")
 	} else {
 		r.ParseMultipartForm(32 << 20)
@@ -91,8 +91,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, title)
 }
 
-func _StaticServer(w http.ResponseWriter, r *http.Request) {
-	http.StripPrefix("/file", http.FileServer(http.Dir("./upload/"))).ServeHTTP(w, r)
+func _file(w http.ResponseWriter, r *http.Request) {
+	http.StripPrefix("/file", http.FileServer(http.Dir(strUploadDir))).ServeHTTP(w, r)
 }
 
 func check(name string) bool {
